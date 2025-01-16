@@ -2,7 +2,7 @@
 # Author: Arthur Clemente Machado (d0pp3lg4nger)
 # Date: 15-01-2025
 # Description: A simple script to get a random movie from a Letterboxd watchlist.
-# Version: 1.2
+# Version: 1.1
 
 # Importing libraries
 import random
