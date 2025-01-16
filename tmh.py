@@ -2,9 +2,15 @@
 # Author: Arthur Clemente Machado (d0pp3lg4nger)
 # Date: 15-01-2025
 # Description: A simple script to get a random movie from a Letterboxd watchlist.
-# Version: 1.1
+# Version: 1.2
 
 # Importing libraries
+import random
+import tkinter as tk
+import sv_ttk as sv
+import requests
+from PIL import Image, ImageTk
+from tkinter import ttk
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -12,7 +18,6 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import random
 
 # Selenium configuration
 chrome_options = Options()
@@ -38,8 +43,7 @@ def get_movies():
     for movie in movies:
         try:  
             # Get the movie title
-            title_element = movie.find_element(By.CSS_SELECTOR, '[data-film-name]')
-            title = title_element.get_attribute('data-film-name')
+            title = movie.find_element(By.CLASS_NAME, 'react-component').get_attribute('data-film-name')
             
             # Get the movie link
             link = movie.find_element(By.CLASS_NAME, 'frame').get_attribute('href')
@@ -86,16 +90,6 @@ while True:
         print("Nenhuma próxima página encontrada ou erro ao carregar a próxima página.")
         break
 
-# Get a random movie from the list
-random_movie = random.choice(movie_list)
-
-# Print the random movie
-print("-" * 40)
-print(f"Filme escolhido: {random_movie['title']}")
-print(f"Link: {random_movie['link']}")
-print(f"Imagem: {random_movie['image_url']}")
-print("-" * 40)
-
 # if movie_list:
 #      for filme in movie_list:
 #          print(f"Título: {filme['title']}")
@@ -107,3 +101,102 @@ print("-" * 40)
 
 
 driver.quit()
+
+# GUI
+
+# Create the main window
+root = tk.Tk()
+root.title("The Movie Herald")
+root.geometry("800x600")
+root.resizable(False, False)
+
+
+# Title
+title = tk.Label(root, text="The Movie Herald", font=("Arial", 24, "bold"), bg="#1a1a1a", fg="#ffffff")
+title.pack(fill="x")
+
+# Movie list
+movie_list_frame = tk.Frame(root, bg="#1a1a1a")
+movie_list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+scrollbar = ttk.Scrollbar(movie_list_frame)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+movies_listbox = tk.Listbox(
+    movie_list_frame, 
+    bg="#1a1a1a", 
+    fg="#ffffff", 
+    font=("Arial", 12), 
+    selectbackground="#1d4369",
+    selectforeground="#ffffff",
+    highlightthickness=0,
+    activestyle="none",
+    yscrollcommand=scrollbar.set
+)
+
+for movie in movie_list:
+    movies_listbox.insert(tk.END, movie['title'])
+movies_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+scrollbar.config(command=movies_listbox.yview)
+
+main_frame = tk.Frame(root, bg="#1a1a1a")
+main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+# Image frame
+image_frame = tk.Label(main_frame, bg="#1a1a1a", text="Imagem do filme", fg="#ffffff", font=("Arial", 12))
+image_frame.grid(row=0, column=0, rowspan=2, sticky="nw", padx=10, pady=10)
+
+details_frame = tk.Frame(main_frame, bg="#1a1a1a")
+details_frame.grid(row=0, column=1, sticky="nw", padx=10, pady=10)
+
+movie_title_label = tk.Label(details_frame, text="Título: ", bg="#1a1a1a", fg="#ffffff", font=("Arial", 16, "bold"))
+movie_title_label.pack(anchor="w")
+
+movie_link_label = tk.Label(details_frame, text="Link: ", bg="#1a1a1a", fg="#ffffff", font=("Arial", 12))
+movie_link_label.pack(anchor="w")
+
+def open_link(event):
+    import webbrowser
+    webbrowser.open_new(event.widget.cget("text"))
+    
+movie_link_label.bind("<Button-1>", open_link)
+
+def display_movie_image(movie):
+    try:
+        movie_title_label.config(text=f"Título: {movie['title']}")
+        movie_link_label.config(text=movie['link'])
+        
+        response = requests.get(movie['image_url'], stream=True)
+        response.raise_for_status
+        
+        img_data = Image.open(response.raw)
+        img_data = img_data.resize((200, 200)) 
+        img = ImageTk.PhotoImage(img_data)
+        
+        image_frame.config(image=img)
+        image_frame.image = img
+    
+    except Exception as e:
+        print(f"Erro ao carregar imagem: {e}")
+        image_frame.config(text="Imagem não encontrada.", font=("Arial", 14), bg="#1a1a1a", fg="#ff0000")
+
+# Funcion to chose a random movie
+def choose_movie():
+    if movie_list:
+        selected_movie = random.choice(movie_list) 
+        display_movie_image(selected_movie)
+    else:
+        image_frame.config(text="Imagem não encontrada.", font=("Arial", 14), bg="#1a1a1a", fg="#ff0000")
+        image_frame.image = None
+
+choose_button = ttk.Button(root, text="Sortear Filme", command=choose_movie)
+choose_button.pack(pady=10)
+
+# Button to close the app
+exit_button = ttk.Button(root, text="Sair", command=root.destroy)
+exit_button.pack(pady=10)
+
+sv.set_theme("dark")
+# Run the main loop
+root.mainloop()
