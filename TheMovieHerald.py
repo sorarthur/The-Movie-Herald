@@ -2,7 +2,7 @@
 # Author: Arthur Clemente Machado (d0pp3lg4nger)
 # Date: 15-01-2025
 # Description: A simple script to get a random movie from a Letterboxd watchlist.
-# Version: 1.2
+# Version: 1.1
 
 # Importing libraries
 import random
@@ -156,16 +156,14 @@ movie_title_label.pack(anchor="w")
 movie_link_label = tk.Label(details_frame, text="Link: ", bg="#1a1a1a", fg="#ffffff", font=("Arial", 12))
 movie_link_label.pack(anchor="w")
 
-def open_link(event):
-    import webbrowser
-    webbrowser.open_new(event.widget.cget("text"))
-    
-movie_link_label.bind("<Button-1>", open_link)
+current_movie_link = ""
 
 def display_movie_image(movie):
+    global current_movie_link
     try:
         movie_title_label.config(text=f"Título: {movie['title']}")
-        movie_link_label.config(text=movie['link'])
+        current_movie_link = movie['link'] 
+        movie_link_label.config(text="Ver mais sobre o filme", fg="#29649e", cursor="hand2")
         
         response = requests.get(movie['image_url'], stream=True)
         response.raise_for_status
@@ -181,6 +179,15 @@ def display_movie_image(movie):
         print(f"Erro ao carregar imagem: {e}")
         image_frame.config(text="Imagem não encontrada.", font=("Arial", 14), bg="#1a1a1a", fg="#ff0000")
 
+# Open the movie link in the browser
+def open_link(event):
+    global current_movie_link
+    if current_movie_link:
+        import webbrowser
+        webbrowser.open_new(current_movie_link)
+    
+# Go to the movie link when clicking the link label
+movie_link_label.bind("<Button-1>", open_link)
 # Funcion to chose a random movie
 def choose_movie():
     if movie_list:
