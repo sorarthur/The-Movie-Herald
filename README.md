@@ -41,7 +41,7 @@ The Movie Herald offers an intuitive way to discover movies from your Letterboxd
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/the-movie-herald.git
+   git clone https://github.com/d0pp3lg4nger/the-movie-herald.git
    ```
 2. Install the required dependencies:
    ```bash
